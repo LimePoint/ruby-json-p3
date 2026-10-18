@@ -218,4 +218,13 @@ class TestRelativeJSONPointer < Minitest::Test
   def test_offset_root
     assert_raises(JSONP3::Pointer::IndexError) { JSONP3::Pointer.new("/foo").to("1+1") }
   end
+
+  def test_parent_index_of_root
+    error = assert_raises(JSONP3::Pointer::IndexError) { JSONP3::Pointer.new("/foo").to("1#") }
+    assert_equal("the document root has no member name or array index", error.message)
+  end
+
+  def test_index_of_root
+    assert_raises(JSONP3::Pointer::IndexError) { JSONP3::Pointer.new("").to("0#") }
+  end
 end

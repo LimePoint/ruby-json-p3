@@ -56,6 +56,8 @@ module JSONP3
       end
 
       if @pointer == "#"
+        raise JSONP3::Pointer::IndexError, "the document root has no member name or array index" if tokens.empty?
+
         tokens[-1] = "##{tokens[-1]}"
         return IndexPointer.new(Pointer.encode(tokens), item: @index != 0)
       end
