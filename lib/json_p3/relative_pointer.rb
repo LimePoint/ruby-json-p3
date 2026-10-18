@@ -75,7 +75,7 @@ module JSONP3
         container = parent.resolve(value)
         name = (@tokens.last || raise).to_s[1..] || raise
 
-        if container.is_a?(Array) && RE_INT.match?(name)
+        if container.is_a?(Array) && RE_INT.match?(name) && name.to_i < container.length
           name.to_i
         elsif container.is_a?(Hash) && container.key?(name)
           name

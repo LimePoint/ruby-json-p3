@@ -151,4 +151,22 @@ class TestRelativeJSONPointer < Minitest::Test
 
     assert_equal([DOC["highly"], "nested"], new_pointer.resolve_with_parent(DOC))
   end
+
+  def test_index_out_of_range
+    new_pointer = JSONP3::Pointer.new("/foo/7").to("0#")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, new_pointer.resolve(DOC))
+  end
+
+  def test_offset_index_out_of_range
+    new_pointer = JSONP3::Pointer.new("/foo/1").to("0+5#")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, new_pointer.resolve(DOC))
+  end
+
+  def test_offset_to_last_index
+    new_pointer = JSONP3::Pointer.new("/foo/0").to("0+2#")
+
+    assert_equal(2, new_pointer.resolve(DOC))
+  end
 end
