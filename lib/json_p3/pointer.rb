@@ -121,9 +121,16 @@ module JSONP3
       return [] if pointer.empty?
       return [""] if pointer == "/"
 
-      (pointer[1..] || raise).split("/", -1).map do |token|
-        token.match?(/\A(?:0|[1-9][0-9]*)\z/) ? Integer(token) : token.gsub("~1", "/").gsub("~0", "~")
-      end
+      (pointer[1..] || raise).split("/", -1).map { |token| parse_token(token) }
+    end
+
+    # @param token [String]
+    # @return [String | Integer]
+    def parse_token(token)
+      return Integer(token) if token.match?(/\A(?:0|[1-9][0-9]*)\z/)
+      raise JSONP3::Pointer::SyntaxError, "invalid escape sequence in '#{token}'" if token.match?(/~(?![01])/)
+
+      token.gsub("~1", "/").gsub("~0", "~")
     end
 
     # @param value [Object]
@@ -131,20 +138,12 @@ module JSONP3
     # @return [Object] the "fetched" object from _value_ or UNDEFINED.
     def get_item(value, token)
       if value.is_a?(Array)
-        if token.is_a?(String) && token.start_with?("#")
-          maybe_index = token[1..] || raise
-          return maybe_index.to_i if RE_INT.match?(maybe_index)
-        end
-
         return UNDEFINED unless token.is_a?(Integer)
         return UNDEFINED if token.negative? || token >= value.length
 
         value[token]
       elsif value.is_a?(Hash)
         return value[token] if value.key?(token)
-
-        # Handle "#" from relative JSON pointer
-        return token[1..] if token.is_a?(String) && token.start_with?("#") && value.key?(token[1..])
 
         # Token might be an integer. Force it to a string and try again.
         string_token = token.to_s
@@ -160,9 +159,7 @@ module JSONP3
     def _parse(pointer)
       return [] if pointer.empty?
 
-      pointer.split("/", -1).map do |token|
-        token.match?(/\A(?:0|[1-9][0-9]*)\z/) ? Integer(token) : token.gsub("~1", "/").gsub("~0", "~")
-      end
+      pointer.split("/", -1).map { |token| parse_token(token) }
     end
 
     def _join(other)

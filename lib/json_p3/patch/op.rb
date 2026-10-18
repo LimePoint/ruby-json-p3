@@ -45,6 +45,10 @@ module JSONP3
       def member_key(parent, target)
         parent.key?(target) ? target : target.to_s
       end
+
+      def deep_copy(obj)
+        Marshal.load(Marshal.dump(obj))
+      end
     end
   end
 end

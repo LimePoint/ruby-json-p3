@@ -22,6 +22,8 @@ module JSONP3
 
       # Return the key of _parent_ identified by pointer token _target_.
       private def member_key: (Hash[untyped, untyped] parent, String | Integer target) -> (String | Integer)
+
+      private def deep_copy: (untyped obj) -> untyped
     end
 
     # The JSON Patch _add_ operation.
@@ -84,8 +86,6 @@ module JSONP3
       def initialize: (JSONP3::Pointer from, JSONP3::Pointer pointer) -> void
 
       def name: () -> "copy"
-              
-      def deep_copy: (untyped obj) -> untyped
     end
 
     # The JSON Patch _test_ operation.

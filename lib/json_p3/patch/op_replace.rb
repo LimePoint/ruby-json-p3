@@ -18,7 +18,7 @@ module JSONP3
 
       def apply!(value, index)
         parent, obj = @pointer.resolve_with_parent(value)
-        return @value if parent == JSONP3::Pointer::UNDEFINED && @pointer.tokens.empty?
+        return deep_copy(@value) if parent == JSONP3::Pointer::UNDEFINED && @pointer.tokens.empty?
 
         if parent == JSONP3::Pointer::UNDEFINED
           raise JSONP3::Patch::Error,
@@ -34,11 +34,11 @@ module JSONP3
         if parent.is_a?(Array)
           raise JSONP3::Patch::Error, "no item to replace (#{name}:#{index})" if obj == JSONP3::Pointer::UNDEFINED
 
-          parent[target.to_i] = @value
+          parent[target.to_i] = deep_copy(@value)
         elsif parent.is_a?(Hash)
           raise JSONP3::Patch::Error, "no property to replace (#{name}:#{index})" if obj == JSONP3::Pointer::UNDEFINED
 
-          parent[member_key(parent, target)] = @value
+          parent[member_key(parent, target)] = deep_copy(@value)
         else
           raise JSONP3::Patch::Error, "unexpected operation on #{parent.class} (#{name}:#{index})"
         end
