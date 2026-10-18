@@ -323,4 +323,29 @@ class TestJSONPatch < Minitest::Test
     error = assert_raises(JSONP3::Patch::Error) { JSONP3::Patch.new([op]) }
     assert_equal("invalid escape sequence in '~2' (add:0)", error.message)
   end
+
+  def test_remove_relative_index_pointer
+    pointer = JSONP3::Pointer.new("/foo/2").to("0#")
+
+    error = assert_raises(JSONP3::Patch::Error) { JSONP3::Patch.new.remove(pointer) }
+    assert_equal("expected a JSON Pointer, found a pointer to a member name or array index (remove:0)", error.message)
+  end
+
+  def test_replace_relative_key_pointer
+    pointer = JSONP3::Pointer.new("/foo/bar").to("0#")
+
+    assert_raises(JSONP3::Patch::Error) { JSONP3::Patch.new.replace(pointer, 1) }
+  end
+
+  def test_move_from_relative_index_pointer
+    pointer = JSONP3::Pointer.new("/foo/2").to("0#")
+
+    assert_raises(JSONP3::Patch::Error) { JSONP3::Patch.new.move(pointer, "/bar") }
+  end
+
+  def test_relative_pointer_to_value
+    pointer = JSONP3::Pointer.new("/foo/2").to("0-2")
+
+    assert_equal({ "foo" => %w[b c] }, JSONP3::Patch.new.remove(pointer).apply!({ "foo" => %w[a b c] }))
+  end
 end

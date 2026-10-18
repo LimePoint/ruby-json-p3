@@ -124,6 +124,11 @@ module JSONP3
     end
 
     def ensure_pointer(pointer, op, index)
+      if pointer.is_a?(RelativePointer::IndexPointer)
+        raise Patch::Error,
+              "expected a JSON Pointer, found a pointer to a member name or array index (#{op}:#{index})"
+      end
+
       return pointer unless pointer.is_a?(String)
 
       JSONP3::Pointer.new(pointer)
