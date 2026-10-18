@@ -169,4 +169,53 @@ class TestRelativeJSONPointer < Minitest::Test
 
     assert_equal(2, new_pointer.resolve(DOC))
   end
+
+  NUMERIC_KEYS = { "o" => { "1" => { "x" => "a" }, "2" => { "x" => "b" } } }.freeze
+
+  def test_offset_member_index
+    new_pointer = JSONP3::Pointer.new("/o/1").to("0+1#")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, new_pointer.resolve(NUMERIC_KEYS))
+  end
+
+  def test_offset_member
+    new_pointer = JSONP3::Pointer.new("/o/1").to("0+1")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, new_pointer.resolve(NUMERIC_KEYS))
+  end
+
+  def test_offset_member_pointer
+    new_pointer = JSONP3::Pointer.new("/o/1/x").to("1+1/x")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, new_pointer.resolve(NUMERIC_KEYS))
+  end
+
+  def test_offset_member_resolve_with_parent
+    new_pointer = JSONP3::Pointer.new("/o/1").to("0+1")
+
+    undefined = JSONP3::Pointer::UNDEFINED
+
+    assert_equal([undefined, undefined], new_pointer.resolve_with_parent(NUMERIC_KEYS))
+  end
+
+  def test_offset_item_pointer
+    new_pointer = JSONP3::Pointer.new("/0/x").to("1+1/x")
+
+    assert_equal("b", new_pointer.resolve([{ "x" => "a" }, { "x" => "b" }]))
+  end
+
+  def test_offset_item_resolve_with_parent
+    new_pointer = JSONP3::Pointer.new("/foo/1").to("0+1")
+
+    assert_equal([%w[bar baz biz], "biz"], new_pointer.resolve_with_parent(DOC))
+  end
+
+  def test_offset_named_member
+    error = assert_raises(JSONP3::Pointer::IndexError) { JSONP3::Pointer.new("/highly/nested").to("0+1") }
+    assert_equal("an index offset can only be applied to an array item", error.message)
+  end
+
+  def test_offset_root
+    assert_raises(JSONP3::Pointer::IndexError) { JSONP3::Pointer.new("/foo").to("1+1") }
+  end
 end

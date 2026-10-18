@@ -29,9 +29,29 @@ module JSONP3
 
     # The result of applying a relative JSON Pointer ending in "#".
     class IndexPointer < Pointer
+      @item: bool
+
+      def initialize: (String pointer, ?item: bool) -> void
+
       def resolve: (untyped value, ?default: untyped) -> untyped
 
       def resolve_with_parent: (untyped value) -> ::Array[untyped]
+    end
+
+    # The result of applying a relative JSON Pointer with an index offset and a JSON
+    # Pointer remainder.
+    class ItemPointer < Pointer
+      @depth: Integer
+
+      def initialize: (String pointer, Integer depth) -> void
+
+      def resolve: (untyped value, ?default: untyped) -> untyped
+
+      def resolve_with_parent: (untyped value) -> ::Array[untyped]
+
+      private
+
+      def array_item?: (untyped value) -> bool
     end
   end
 end
