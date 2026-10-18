@@ -18,14 +18,14 @@ module JSONP3
 
       def apply!(value, index)
         parent, _obj = @pointer.resolve_with_parent(value)
-        return @value if parent == JSONP3::Pointer::UNDEFINED && @pointer.tokens.empty?
+        return deep_copy(@value) if parent == JSONP3::Pointer::UNDEFINED && @pointer.tokens.empty?
 
         if parent == JSONP3::Pointer::UNDEFINED
           raise JSONP3::Patch::Error,
                 "no such property or item '#{@pointer.parent}' (#{name}:#{index})"
         end
 
-        add_member(parent, @pointer.tokens.last, @value, index)
+        add_member(parent, @pointer.tokens.last, deep_copy(@value), index)
         value
       end
 

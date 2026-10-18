@@ -41,12 +41,6 @@ module JSONP3
       def to_h
         { "op" => name, "from" => @from.to_s, "path" => @pointer.to_s }
       end
-
-      private
-
-      def deep_copy(obj)
-        Marshal.load(Marshal.dump(obj))
-      end
     end
   end
 end

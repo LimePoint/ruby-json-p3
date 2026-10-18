@@ -48,10 +48,10 @@ module JSONP3
 
       if @pointer == "#"
         tokens[-1] = "##{tokens[-1]}"
-      else
-        tokens.concat(@pointer.tokens) # steep:ignore
+        return IndexPointer.new(Pointer.encode(tokens))
       end
 
+      tokens.concat(@pointer.tokens) # steep:ignore
       Pointer.new(Pointer.encode(tokens))
     end
 
@@ -64,6 +64,31 @@ module JSONP3
       raise JSONP3::Pointer::SyntaxError, "expected an integer, found '#{token}'" unless RE_INT.match?(token)
 
       token.to_i
+    end
+
+    # The result of applying a relative JSON Pointer ending in "#". Its last token is
+    # the "#" prefixed name or index of the target, which resolves to that name or index.
+    class IndexPointer < Pointer
+      # @param value [Object]
+      # @param default [Object]
+      def resolve(value, default: UNDEFINED)
+        container = parent.resolve(value)
+        name = (@tokens.last || raise).to_s[1..] || raise
+
+        if container.is_a?(Array) && RE_INT.match?(name)
+          name.to_i
+        elsif container.is_a?(Hash) && container.key?(name)
+          name
+        else
+          default
+        end
+      end
+
+      # @param value [Object]
+      # @return [Array<Object>]
+      def resolve_with_parent(value)
+        [parent.resolve(value), resolve(value)]
+      end
     end
   end
 end

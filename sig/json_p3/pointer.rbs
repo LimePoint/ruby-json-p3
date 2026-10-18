@@ -49,6 +49,10 @@ module JSONP3
     # @return [Array<String | Integer>]
     def parse: (String pointer) -> Array[(String | Integer)]
 
+    # @param token [String]
+    # @return [String | Integer]
+    def parse_token: (String token) -> (String | Integer)
+
     # @param value [Object]
     # @param token [String | Integer]
     # @return [Object] the "fetched" object from _value_ or UNDEFINED.

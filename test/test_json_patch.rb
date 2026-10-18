@@ -243,4 +243,84 @@ class TestJSONPatch < Minitest::Test
 
     assert_equal({ "foo" => { "1" => "b" }, "a" => "b" }, patch.apply!({ "foo" => {}, "a" => "b" }))
   end
+
+  def test_remove_hash_prefixed_target_that_does_not_exist
+    patch = JSONP3::Patch.new.remove("/#foo")
+
+    error = assert_raises(JSONP3::Patch::Error) { patch.apply!({ "foo" => 1 }) }
+    assert_equal("no property to remove (remove:0)", error.message)
+  end
+
+  def test_remove_hash_prefixed_index
+    patch = JSONP3::Patch.new.remove("/#1")
+
+    assert_raises(JSONP3::Patch::Error) { patch.apply!([10, 20, 30]) }
+  end
+
+  def test_replace_hash_prefixed_index
+    patch = JSONP3::Patch.new.replace("/#9", 99)
+
+    assert_raises(JSONP3::Patch::Error) { patch.apply!([10, 20, 30]) }
+  end
+
+  def test_copy_from_hash_prefixed_source_that_does_not_exist
+    patch = JSONP3::Patch.new.copy("/#foo", "/bar")
+
+    assert_raises(JSONP3::Patch::Error) { patch.apply!({ "foo" => 1 }) }
+  end
+
+  def test_test_hash_prefixed_path
+    patch = JSONP3::Patch.new.test("/#foo", "foo")
+
+    assert_raises(JSONP3::Patch::Error) { patch.apply!({ "foo" => 1 }) }
+  end
+
+  def test_add_does_not_share_its_value_between_applications
+    patch = JSONP3::Patch.new.add("/k", []).add("/k/-", 1)
+    patch.apply!({})
+
+    assert_equal({ "k" => [1] }, patch.apply!({}))
+  end
+
+  def test_add_to_array_does_not_share_its_value_with_the_patch
+    patch = JSONP3::Patch.new.add("/-", { "a" => 1 })
+    result = patch.apply!([])
+    result[0]["a"] = 2
+
+    assert_equal({ "op" => "add", "path" => "/-", "value" => { "a" => 1 } }, patch.to_a.first)
+  end
+
+  def test_add_root_does_not_share_its_value_between_applications
+    patch = JSONP3::Patch.new.add("", { "k" => [] }).add("/k/-", 1)
+    patch.apply!({})
+
+    assert_equal({ "k" => [1] }, patch.apply!({}))
+  end
+
+  def test_replace_does_not_share_its_value_between_applications
+    patch = JSONP3::Patch.new.replace("/k", []).add("/k/-", 1)
+    patch.apply!({ "k" => nil })
+
+    assert_equal({ "k" => [1] }, patch.apply!({ "k" => nil }))
+  end
+
+  def test_replace_array_item_does_not_share_its_value_between_applications
+    patch = JSONP3::Patch.new.replace("/0", []).add("/0/-", 1)
+    patch.apply!([nil])
+
+    assert_equal([[1]], patch.apply!([nil]))
+  end
+
+  def test_replace_root_does_not_share_its_value_between_applications
+    patch = JSONP3::Patch.new.replace("", { "k" => [] }).add("/k/-", 1)
+    patch.apply!({})
+
+    assert_equal({ "k" => [1] }, patch.apply!({}))
+  end
+
+  def test_build_invalid_escape_sequence
+    op = { "op" => "add", "path" => "/~2", "value" => 1 }
+    error = assert_raises(JSONP3::Patch::Error) { JSONP3::Patch.new([op]) }
+    assert_equal("invalid escape sequence in '~2' (add:0)", error.message)
+  end
 end

@@ -239,4 +239,41 @@ class TestJSONPointer < Minitest::Test
 
     refute(pointer.exist?(data))
   end
+
+  def test_hash_prefixed_member_name_is_literal
+    data = { "foo" => 1, "#foo" => 2 }
+
+    assert_equal(2, JSONP3::Pointer.new("/#foo").resolve(data))
+  end
+
+  def test_hash_prefixed_token_does_not_resolve_to_the_name
+    pointer = JSONP3::Pointer.new("/#foo")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, pointer.resolve({ "foo" => 1 }))
+  end
+
+  def test_hash_prefixed_token_does_not_resolve_to_an_index
+    pointer = JSONP3::Pointer.new("/#1")
+
+    assert_equal(JSONP3::Pointer::UNDEFINED, pointer.resolve([10, 20, 30]))
+  end
+
+  def test_invalid_escape_sequence
+    error = assert_raises(JSONP3::Pointer::SyntaxError) { JSONP3::Pointer.new("/foo/~2") }
+    assert_equal("invalid escape sequence in '~2'", error.message)
+  end
+
+  def test_trailing_tilde
+    assert_raises(JSONP3::Pointer::SyntaxError) { JSONP3::Pointer.new("/foo~") }
+  end
+
+  def test_invalid_escape_sequence_in_join
+    assert_raises(JSONP3::Pointer::SyntaxError) { JSONP3::Pointer.new("/foo").join("b~ar") }
+  end
+
+  def test_valid_escape_sequences
+    pointer = JSONP3::Pointer.new("/~01/~10")
+
+    assert_equal(["~1", "/0"], pointer.tokens)
+  end
 end

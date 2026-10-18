@@ -26,5 +26,12 @@ module JSONP3
     # @param token [String]
     # @return [Integer]
     def parse_int: (String token) -> Integer
+
+    # The result of applying a relative JSON Pointer ending in "#".
+    class IndexPointer < Pointer
+      def resolve: (untyped value, ?default: untyped) -> untyped
+
+      def resolve_with_parent: (untyped value) -> ::Array[untyped]
+    end
   end
 end

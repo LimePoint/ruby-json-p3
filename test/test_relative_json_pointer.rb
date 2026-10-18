@@ -139,4 +139,16 @@ class TestRelativeJSONPointer < Minitest::Test
     assert_equal(p.to(rel).to_s, new_pointer.to_s)
     assert_equal(r.to_s, rel)
   end
+
+  def test_index_resolve_with_parent
+    new_pointer = JSONP3::Pointer.new("/foo/1").to("0#")
+
+    assert_equal([%w[bar baz biz], 1], new_pointer.resolve_with_parent(DOC))
+  end
+
+  def test_key_resolve_with_parent
+    new_pointer = JSONP3::Pointer.new("/highly/nested").to("0#")
+
+    assert_equal([DOC["highly"], "nested"], new_pointer.resolve_with_parent(DOC))
+  end
 end
